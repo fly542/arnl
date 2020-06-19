@@ -10,11 +10,11 @@ use std::io::BufReader;
 use crate::redis_client::RedisClient;
 
 pub enum RedisResult {
-    RString(String),    // 简单单行字符串
-    RError(String),     // 错误结果
-    RInt(i64),          // 整形结果
-    RBString(u32, String),   // 单二进制安全字符串
-    RArray(u32, Vec<String>),// 数组
+    RString(String),            // 简单单行字符串
+    RError(String),             // 错误结果
+    RInt(i64),                  // 整形结果
+    RBString(u32, String),      // 单二进制安全字符串
+    RArray(u32, Vec<String>),   // 数组
 }
 
 impl RedisResult {
