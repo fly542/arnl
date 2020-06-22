@@ -15,7 +15,8 @@ fn main() {
     let key = "a";
     let mut rstr = RedisString::new(&mut stream);
     println!("timout ={}", conn_timeout);
-    if rstr.set(&key, "v") {
+    if rstr.set(&key, "whb") {
+        println!("to get data");
         match rstr.get("a") {
             Ok(value) => {
                 println!("main get {}={}", key, value);

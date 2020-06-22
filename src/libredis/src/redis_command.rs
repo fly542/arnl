@@ -95,8 +95,17 @@ impl<'a> RedisCommand<'a> {
     pub fn read_string(&mut self) -> Result<String, RedisError> {
         match RedisResult::parse_result(& mut self.conn) {
             RedisResult::RString(ret) => return Ok(ret),
-            RedisResult::RError(ret) => return Ok(ret),
-            _ => return Ok("xxxx".to_string()),
+            RedisResult::RError(ret) => return Err(RedisError::Info(ret.to_string())),
+            RedisResult::RBString(ret) => {
+                match String::from_utf8(ret) {
+                    Ok(ret) => {
+                        println!("data={}", ret);
+                        return Ok(ret);
+                    },
+                    Err(e) => return Err(RedisError::Info(e.to_string())),
+                }
+            },
+            _ => return Err(RedisError::Info("not string".to_string())),
             //TODO 错误
         }
 

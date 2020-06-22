@@ -7,6 +7,7 @@
 pub enum RedisError {
     IoError(std::io::Error),
     AddrParseError(std::net::AddrParseError),
+    Info(String),
 }
 
 impl std::error::Error for RedisError {
@@ -14,6 +15,7 @@ impl std::error::Error for RedisError {
         match &self {
             RedisError::IoError(ref e) => Some(e),
             RedisError::AddrParseError(ref e) => Some(e),
+            RedisError::Info(_) => None,
         }
     }
 }
@@ -24,19 +26,22 @@ impl std::fmt::Display for RedisError {
         match &self {
             RedisError::IoError(ref e) => e.fmt(f),
             RedisError::AddrParseError(ref e) => e.fmt(f),
+            RedisError::Info(ref e) => {
+                write!(f, "{:?}", e)
+            }
         }
     }
 }
 
 impl From<std::io::Error> for RedisError {
     fn from(s: std::io::Error) -> Self {
-        RedisError::IoError(s)
+        RedisError::Info(s.to_string())
     }
 }
 
 /// 转换AddrParseError 错误到RedisError
 impl From<std::net::AddrParseError> for RedisError {
     fn from(s: std::net::AddrParseError) -> Self {
-        RedisError::AddrParseError(s)
+        RedisError::Info(s.to_string())
     }
 }
