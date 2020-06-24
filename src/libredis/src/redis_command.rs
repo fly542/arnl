@@ -71,9 +71,9 @@ impl<'a> RedisCommand<'a> {
     }
 
     /// 返回命令内容字节信息
-    pub fn as_bytes(&self) ->&[u8] {
-        self.cmd_str.as_bytes()
-    }
+    //pub fn as_bytes(&self) ->&[u8] {
+    //    self.cmd_str.as_bytes()
+    //}
 
     ///写入数据到服务端
     pub fn write(&mut self) ->Result<(), RedisError> {
@@ -96,7 +96,7 @@ impl<'a> RedisCommand<'a> {
         match RedisResult::parse_result(& mut self.conn) {
             RedisResult::RString(ret) => return Ok(ret),
             RedisResult::RError(ret) => return Err(RedisError::Info(ret.to_string())),
-            RedisResult::RBString(ret) => {
+            RedisResult::RBData(ret) => {
                 match String::from_utf8(ret) {
                     Ok(ret) => {
                         println!("data={}", ret);

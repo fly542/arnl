@@ -13,11 +13,30 @@ pub enum RedisResult {
     RString(String),            // 简单单行字符串
     RError(String),             // 错误结果
     RInt(i64),                  // 整形结果
-    RBString(Vec<u8>),      // 单二进制安全字符串
-    RArray(u32, Vec<Vec<u8>>),   // 数组
+    RBData(Vec<u8>),            // 单二进制安全字符串
+    RArray(u32, Vec<Vec<u8>>),  // 数组
 }
 
 impl RedisResult {
+    /// 读取一组二进制数据, 读取一行长度信息，再读取一组数据
+    fn read_group_rbdata<R: BufRead>(reader: &mut R) -> Option<Vec<u8>> {
+        let mut buf: String = String::new();
+        match reader.read_line(&mut buf) {
+            Ok(_) => { // 不需要返回的长度
+                match RedisResult::parse_type(buf) {
+                    RedisResult::RBData(mut data) => {
+                        match reader.read_exact(data.as_mut_slice()) {
+                            Ok(()) => Some(data),
+                            _ => None,
+                        }
+                    },
+                    _ => None,
+                }
+            },
+            _ => None,
+        }
+    }
+
     /// 解析结果类型
     fn parse_type(data: String) -> RedisResult{
         let line = data.trim_end_matches("\r\n");
@@ -44,7 +63,7 @@ impl RedisResult {
                 match line[1..].parse::<usize>() {
                     Ok(val) => {
                         // 注意， 此处不能使用Vec::new()或Vec::with_capcacity(val)
-                        return RedisResult::RBString(vec![0; val]);
+                        return RedisResult::RBData(vec![0; val]);
                     },
                     Err(e) => {
                         return RedisResult::RError(
@@ -70,28 +89,30 @@ impl RedisResult {
         }
     }
 
-    pub fn parse_result(cli: &mut RedisClient) -> RedisResult{
+    pub fn parse_result(cli: &mut RedisClient) -> RedisResult {
         let mut reader = BufReader::new(&cli.stream);
         let mut buf: String = String::new();
         match reader.read_line(&mut buf) {
             Ok(_) => { // 不需要返回的长度
                 let mut ret = RedisResult::parse_type(buf);
                 match ret {
-                    RedisResult::RBString(ref mut data) => {
+                    RedisResult::RBData(ref mut data) => {
                         match reader.read_exact(data.as_mut_slice()) {
-                            Ok(()) => {
-                                println!("will read = {}",
-                                String::from_utf8(data.to_vec()).expect("aaa"));
-                                return ret;
-                            }
-                            Err(e) => return RedisResult::RError(
+                            Ok(_) => {
+                                ret
+                            },
+                            Err(e) => RedisResult::RError(
                                 format!("read_line error, err={}", e.to_string())),
                         }
                     }
-                    RedisResult::RArray(len, ref dt) => {
-                        println!("read data len={}", len);
-                        return ret;
-                    }
+                    RedisResult::RArray(len, ref mut dt) => {
+                        for _seq in 0..len {
+                            RedisResult::read_group_rbdata(&mut reader).map(
+                                |v|dt.push(v));
+                            println!("read data len={}", len);
+                        }
+                        ret
+                    },
                     _ => ret,
                 }
             },
