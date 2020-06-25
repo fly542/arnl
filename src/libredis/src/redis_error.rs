@@ -26,13 +26,12 @@ impl std::fmt::Display for RedisError {
         match &self {
             RedisError::IoError(ref e) => e.fmt(f),
             RedisError::AddrParseError(ref e) => e.fmt(f),
-            RedisError::Info(ref e) => {
-                write!(f, "{:?}", e)
-            }
+            RedisError::Info(ref e) => write!(f, "{:?}", e),
         }
     }
 }
 
+/// 转换io::Error 到 RedisError
 impl From<std::io::Error> for RedisError {
     fn from(s: std::io::Error) -> Self {
         RedisError::Info(s.to_string())

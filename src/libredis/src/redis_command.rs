@@ -1,3 +1,4 @@
+use std::io::prelude::*;
 ///
 ///
 /// redis相关命令基础类
@@ -6,7 +7,6 @@
 ///     http://www.redis.cn/topics/protocol.html
 ///
 use std::str;
-use std::io::prelude::*;
 //use std::io::BufReader;
 use crate::redis_client::RedisClient;
 use crate::redis_error::RedisError;
@@ -19,7 +19,7 @@ pub struct RedisCommand<'a> {
 
 impl<'a> RedisCommand<'a> {
     /// 构造空的RedisCommand
-    pub fn new(cli:&'a mut RedisClient ) -> RedisCommand {
+    pub fn new(cli: &'a mut RedisClient) -> RedisCommand {
         RedisCommand {
             cmd_str: "".to_string(),
             conn: cli,
@@ -76,39 +76,36 @@ impl<'a> RedisCommand<'a> {
     //}
 
     ///写入数据到服务端
-    pub fn write(&mut self) ->Result<(), RedisError> {
+    pub fn write(&mut self) -> Result<(), RedisError> {
         //self.conn.stream.write_all(self.cmd_str.as_bytes())?;
         //Ok(())
         match self.conn.stream.write_all(self.cmd_str.as_bytes()) {
             Ok(()) => {
-//                println!(",cmd.len={}, da={}=",self.cmd_str.len(), self.cmd_str);
+                //                println!(",cmd.len={}, da={}=",self.cmd_str.len(), self.cmd_str);
                 self.cmd_str.clear();
                 return Ok(());
-            },
+            }
             Err(e) => {
                 self.cmd_str.clear();
                 return Err(RedisError::IoError(e));
-            },
+            }
         };
     }
 
     pub fn read_string(&mut self) -> Result<String, RedisError> {
-        match RedisResult::parse_result(& mut self.conn) {
+        match RedisResult::parse_result(&mut self.conn) {
             RedisResult::RString(ret) => return Ok(ret),
             RedisResult::RError(ret) => return Err(RedisError::Info(ret.to_string())),
-            RedisResult::RBData(ret) => {
-                match String::from_utf8(ret) {
-                    Ok(ret) => {
-                        println!("data={}", ret);
-                        return Ok(ret);
-                    },
-                    Err(e) => return Err(RedisError::Info(e.to_string())),
+            RedisResult::RBData(ret) => match String::from_utf8(ret) {
+                Ok(ret) => {
+                    println!("data={}", ret);
+                    return Ok(ret);
                 }
+                Err(e) => return Err(RedisError::Info(e.to_string())),
             },
             _ => return Err(RedisError::Info("not string".to_string())),
             //TODO 错误
         }
-
 
         ////read函数传递参数为mut 切片 fn read(&mut self, buf: &mut [u8])
         //let mut buffer = [0; 512];
@@ -118,7 +115,7 @@ impl<'a> RedisCommand<'a> {
     }
 
     pub fn check_status(&mut self) -> bool {
-        match RedisResult::parse_result(& mut self.conn) {
+        match RedisResult::parse_result(&mut self.conn) {
             RedisResult::RString(_) => return true,
             _ => return false,
         };

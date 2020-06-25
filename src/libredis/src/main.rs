@@ -1,8 +1,8 @@
-mod redis_error;
 mod redis_client;
 mod redis_command;
-mod redis_string;
+mod redis_error;
 mod redis_result;
+mod redis_string;
 
 use redis_client::RedisClient;
 use redis_string::RedisString;
@@ -20,7 +20,7 @@ fn main() {
         match rstr.get("a") {
             Ok(value) => {
                 println!("main get {}={}", key, value);
-            },
+            }
             Err(err) => {
                 println!("err={:?}", err);
             }
