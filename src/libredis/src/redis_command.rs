@@ -6,14 +6,14 @@ use std::io::prelude::*;
 ///     https://redis.io/topics/protocol
 ///     http://www.redis.cn/topics/protocol.html
 ///
-use std::str;
+//use std::str;
 //use std::io::BufReader;
 use crate::redis_client::RedisClient;
 use crate::redis_error::RedisError;
 use crate::redis_result::RedisResult;
 
 pub struct RedisCommand<'a> {
-    cmd_str: String,
+    cmd_str: Vec<u8>,
     conn: &'a mut RedisClient,
 }
 
@@ -21,52 +21,52 @@ impl<'a> RedisCommand<'a> {
     /// 构造空的RedisCommand
     pub fn new(cli: &'a mut RedisClient) -> RedisCommand {
         RedisCommand {
-            cmd_str: "".to_string(),
+            cmd_str: Vec::new(),
             conn: cli,
         }
     }
-
-    /// 添加单个字符
-    pub fn add_char(&mut self, s: char) -> &mut Self {
-        self.cmd_str.push(s);
+    /// 添加二进制字节, 会移动 `other` 中的内容到 `Self` 中,
+    /// 添加后 `other` 将为空
+    pub fn add_bytes(&mut self, other: &mut Vec<u8>) -> &mut Self {
+        self.cmd_str.append(other);
         self
     }
 
+    /// 添加单个字符,
+    /// 不使用s as u8, 因为考虑char为4个字节，单个u8可能无法表示
+    pub fn add_char(&mut self, s: char) -> &mut Self {
+        self.add_str(s.to_string())
+    }
+
     /// 添加字符串
-    pub fn add_str(&mut self, s: &str) -> &mut Self {
-        self.cmd_str.push_str(s);
-        self
+    pub fn add_str(&mut self, s: String) -> &mut Self {
+        self.add_bytes(&mut s.into_bytes())
     }
 
     /// 添加回车换行
     pub fn add_crnl(&mut self) -> &mut Self {
-        self.add_str("\r\n");
-        self
+        self.add_str("\r\n".to_string())
     }
 
     /// 添加数值
     pub fn add_usize(&mut self, n: usize) -> &mut Self {
-        self.add_str(n.to_string().as_str());
-        self
+        self.add_str(n.to_string())
     }
 
     /// 添加要发送的字段个数
     pub fn add_array(&mut self, n: usize) -> &mut Self {
-        self.add_char('*').add_usize(n).add_crnl();
-        self
+        self.add_char('*').add_usize(n).add_crnl()
     }
 
-    pub fn add_buik_string(&mut self, s: &str) -> &mut Self {
+    pub fn add_bulk_string(&mut self, s:&mut Vec<u8>) -> &mut Self {
         if s.is_empty() {
-            self.add_str("$-1").add_crnl();
-            self
+            self.add_str("$-1".to_string()).add_crnl()
         } else {
             self.add_char('$')
                 .add_usize(s.len())
                 .add_crnl()
-                .add_str(s)
-                .add_crnl();
-            self
+                .add_bytes(s)
+                .add_crnl()
         }
     }
 
@@ -77,19 +77,13 @@ impl<'a> RedisCommand<'a> {
 
     ///写入数据到服务端
     pub fn write(&mut self) -> Result<(), RedisError> {
-        //self.conn.stream.write_all(self.cmd_str.as_bytes())?;
-        //Ok(())
-        match self.conn.stream.write_all(self.cmd_str.as_bytes()) {
-            Ok(()) => {
-                //                println!(",cmd.len={}, da={}=",self.cmd_str.len(), self.cmd_str);
-                self.cmd_str.clear();
-                return Ok(());
-            }
-            Err(e) => {
-                self.cmd_str.clear();
-                return Err(RedisError::IoError(e));
-            }
-        };
+        let ret = self.conn.stream.write_all(self.cmd_str.as_slice());
+        self.cmd_str.clear();
+        if let Err(e) = ret {
+            Err(RedisError::IoError(e))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn read_string(&mut self) -> Result<String, RedisError> {
