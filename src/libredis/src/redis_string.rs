@@ -33,18 +33,18 @@ impl<'a> RedisString<'a> {
 
     /// 将val关联到 key, 并将 key 的生存时间设为 timeout (以秒为单位)
     /// 如果 key 已经存在， SETEX 命令将覆写旧值
-    //pub fn setex(&mut self, key: &str, val: &mut [u8], timeout: u32) -> bool {
-    //        self.cmd
-    //        .add_array(3)
-    //        .add_bulk_string("SET")
-    //        .add_bulk_string(key)
-    //        .add_bulk_string(val);
-    //    match self.cmd.write() {
-    //        Err(_) => false,
-    //        Ok(_) => self.cmd.check_status(),
-    //    }
-    //    false
-    //}
+    pub fn setex(&mut self, key: &str, val: &mut Vec<u8>, timeout: u32) -> bool {
+            self.cmd
+            .add_array(4)
+            .add_bulk_string(&mut "SET".to_string().into_bytes())
+            .add_bulk_string(&mut key.to_string().into_bytes())
+            .add_bulk_string(&mut timeout.to_string().into_bytes())
+            .add_bulk_string(val);
+        match self.cmd.write() {
+            Err(_) => false,
+            Ok(_) => self.cmd.check_status(),
+        }
+    }
 
     pub fn get(&mut self, key: &str) -> Result<String, RedisError> {
         self.cmd
