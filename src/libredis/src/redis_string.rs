@@ -24,14 +24,7 @@ impl<'a> RedisString<'a> {
             .add_array(3)
             .add_bulk_string("SET")
             .add_bulk_string(key)
-            .add_bulk_string(val);
-            //.add_bulk_string(&mut "SET".to_string().into_bytes())
-            //.add_bulk_string(&mut key.to_string().into_bytes())
-            //.add_bulk_string(&mut val.to_string().into_bytes());
-        match self.cmd.write() {
-            Err(_) => false,
-            Ok(_) => self.cmd.check_status(),
-        }
+            .add_bulk_string(val).check_status()
     }
 
     /// 将val关联到 key, 并将 key 的生存时间设为 timeout (以秒为单位)
@@ -42,15 +35,7 @@ impl<'a> RedisString<'a> {
             .add_bulk_string("SET")
             .add_bulk_string(key)
             .add_bulk_string(timeout)
-            .add_bulk_string(val);
-            //.add_bulk_string(&mut "SET".to_string().into_bytes())
-            //.add_bulk_string(&mut key.to_string().into_bytes())
-            //.add_bulk_string(&mut timeout.to_string().into_bytes())
-            //.add_bulk_string(val);
-        match self.cmd.write() {
-            Err(_) => false,
-            Ok(_) => self.cmd.check_status(),
-        }
+            .add_bulk_string(val).check_status()
     }
 
     pub fn get(&mut self, key: &str) -> Result<String, RedisError> {
@@ -58,8 +43,6 @@ impl<'a> RedisString<'a> {
             .add_array(2)
             .add_bulk_string("GET")
             .add_bulk_string(key);
-            //.add_bulk_string(&mut "GET".to_string().into_bytes())
-            //.add_bulk_string(&mut key.to_string().into_bytes());
         self.cmd.write()?;
         self.cmd.read_string()
     }

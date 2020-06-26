@@ -19,6 +19,8 @@ pub struct RedisCommand<'a> {
 
 /// 批量添加数据信息,
 pub trait AddBulkString<T> {
+    //为了避免调用者大量的使用.add_bulk_string(&mut "SET".to_string().into_bytes())
+    //所以定义此trait，实现函数重载目的
     /// 批量添加数据
     fn add_bulk_string(&mut self, v:T) -> &mut Self;
 }
@@ -114,11 +116,16 @@ impl<'a> RedisCommand<'a> {
         //Ok(response.to_string())
     }
 
+    /// 写入数据并检测发送数据后返回的结果是否正确
     pub fn check_status(&mut self) -> bool {
-        match RedisResult::parse_result(&mut self.conn) {
-            RedisResult::RString(_) => return true,
-            _ => return false,
-        };
+        if let Ok(_)=self.write() {
+            match RedisResult::parse_result(&mut self.conn) {
+                RedisResult::RString(_) => return true,
+                _ => return false,
+            }
+        } else {
+            false
+        }
     }
 }
 
