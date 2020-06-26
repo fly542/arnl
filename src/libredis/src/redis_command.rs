@@ -118,6 +118,7 @@ impl<'a> RedisCommand<'a> {
 
     /// 写入数据并检测发送数据后返回的结果是否正确
     pub fn check_status(&mut self) -> bool {
+        //    println!("write ok {}", String::from_utf8(self.cmd_str.clone()).unwrap());
         if let Ok(_)=self.write() {
             match RedisResult::parse_result(&mut self.conn) {
                 RedisResult::RString(_) => return true,

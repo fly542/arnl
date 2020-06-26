@@ -32,7 +32,7 @@ impl<'a> RedisString<'a> {
     pub fn setex(&mut self, key: &str, val: &mut Vec<u8>, timeout: u32) -> bool {
             self.cmd
             .add_array(4)
-            .add_bulk_string("SET")
+            .add_bulk_string("SETEX")
             .add_bulk_string(key)
             .add_bulk_string(timeout)
             .add_bulk_string(val).check_status()
