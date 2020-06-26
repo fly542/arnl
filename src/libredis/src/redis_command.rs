@@ -128,6 +128,20 @@ impl<'a> RedisCommand<'a> {
             false
         }
     }
+
+    pub fn check_status_2(&mut self) -> i32 {
+        //    println!("write ok {}", String::from_utf8(self.cmd_str.clone()).unwrap());
+        if let Ok(_)=self.write() {
+            match RedisResult::parse_result(&mut self.conn) {
+                RedisResult::RInt(ret) => ret as i32,
+                _ => -1i32,
+            }
+        } else {
+            println!("aaa{}:{}", file!(), line!());
+            -1i32
+        }
+    }
+
 }
 
 impl<'a> AddBulkString<&str> for RedisCommand<'a> {

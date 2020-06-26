@@ -30,4 +30,6 @@ fn main() {
     if rstr.setex("whb2", &mut "abc".to_string().into_bytes(), 10) {
         println!("success set whb2=abc timeout=10s");
     }
+
+    println!("setnx dup={}", rstr.setnx("whb2", "abc"));
 }
