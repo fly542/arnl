@@ -17,6 +17,12 @@ pub struct RedisCommand<'a> {
     conn: &'a mut RedisClient,
 }
 
+/// 批量添加数据信息,
+pub trait AddBulkString<T> {
+    /// 批量添加数据
+    fn add_bulk_string(&mut self, v:T) -> &mut Self;
+}
+
 impl<'a> RedisCommand<'a> {
     /// 构造空的RedisCommand
     pub fn new(cli: &'a mut RedisClient) -> RedisCommand {
@@ -58,7 +64,7 @@ impl<'a> RedisCommand<'a> {
         self.add_char('*').add_usize(n).add_crnl()
     }
 
-    pub fn add_bulk_string(&mut self, s:&mut Vec<u8>) -> &mut Self {
+    fn bulk_string(&mut self, s:&mut Vec<u8>) -> &mut Self {
         if s.is_empty() {
             self.add_str("$-1".to_string()).add_crnl()
         } else {
@@ -113,52 +119,29 @@ impl<'a> RedisCommand<'a> {
             RedisResult::RString(_) => return true,
             _ => return false,
         };
-        //let mut reader = BufReader::new(&self.conn.stream);
-        //let mut buf: String = String::new();
-        //match reader.read_line(&mut buf) {
-        //    Ok(s) => {
-        //        println!("ln={}, buf={}", s, ret);
-        //    }
-        //    Err(e) => {
-        //        println!("err={}", e);
-        //        return false;
-        //    }
-        //};
-        //true
+    }
+}
 
-        //let mut reader = BufReader::new(&self.conn.stream);
-        //let mut buf: Vec<u8> = Vec::new();
-        //match reader.read_until(b'\n', &mut buf) {
-        //    Ok(s) => {
-        //        match str::from_utf8(&buf) {
-        //            Ok(st) => {
-        //                println!("status len={} {}",s, st);
-        //            },
-        //            Err(e) => {
-        //                println!("reader err={}", e);
-        //            },
-        //        }
-        //        return true;
-        //    },
-        //    Err(e) => {
-        //        println!(" reader err={}", e);
-        //        return false;
-        //    },
-        //}
-        //true
+impl<'a> AddBulkString<&str> for RedisCommand<'a> {
+    fn add_bulk_string(&mut self, s:&str) -> &mut Self {
+        self.bulk_string(&mut s.to_string().into_bytes())
+    }
+}
 
-        //let mut buf = [0; 512];
-        //println!("befor read, {}", line!());
-        //self.conn.stream.read(&mut buf[..]).unwrap();
-        //println!("after read {}, buf.len={}", line!(), buf.len());
-        //true
+impl<'a> AddBulkString<String> for RedisCommand<'a> {
+    fn add_bulk_string(&mut self, s:String) -> &mut Self {
+        self.bulk_string(&mut s.into_bytes())
+    }
+}
 
-        //match self.read_string() {
-        //    Ok(data) => {
-        //        println!("read data={}", data);
-        //        true
-        //    },
-        //    Err(_) => false,
-        //}
+impl<'a> AddBulkString<&mut Vec<u8>> for RedisCommand<'a> {
+    fn add_bulk_string(&mut self, s:&mut Vec<u8>) -> &mut Self {
+        self.bulk_string(s)
+    }
+}
+
+impl<'a> AddBulkString<u32> for RedisCommand<'a> {
+    fn add_bulk_string(&mut self, u:u32) -> &mut Self {
+        self.bulk_string(&mut u.to_string().into_bytes())
     }
 }

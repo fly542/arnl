@@ -1,5 +1,5 @@
 use crate::redis_client::RedisClient;
-use crate::redis_command::RedisCommand;
+use crate::redis_command::{RedisCommand, AddBulkString};
 ///
 ///
 /// redis string 操作
@@ -22,9 +22,12 @@ impl<'a> RedisString<'a> {
     pub fn set(&mut self, key: &str, val: &str) -> bool {
         self.cmd
             .add_array(3)
-            .add_bulk_string(&mut "SET".to_string().into_bytes())
-            .add_bulk_string(&mut key.to_string().into_bytes())
-            .add_bulk_string(&mut val.to_string().into_bytes());
+            .add_bulk_string("SET")
+            .add_bulk_string(key)
+            .add_bulk_string(val);
+            //.add_bulk_string(&mut "SET".to_string().into_bytes())
+            //.add_bulk_string(&mut key.to_string().into_bytes())
+            //.add_bulk_string(&mut val.to_string().into_bytes());
         match self.cmd.write() {
             Err(_) => false,
             Ok(_) => self.cmd.check_status(),
@@ -36,10 +39,14 @@ impl<'a> RedisString<'a> {
     pub fn setex(&mut self, key: &str, val: &mut Vec<u8>, timeout: u32) -> bool {
             self.cmd
             .add_array(4)
-            .add_bulk_string(&mut "SET".to_string().into_bytes())
-            .add_bulk_string(&mut key.to_string().into_bytes())
-            .add_bulk_string(&mut timeout.to_string().into_bytes())
+            .add_bulk_string("SET")
+            .add_bulk_string(key)
+            .add_bulk_string(timeout)
             .add_bulk_string(val);
+            //.add_bulk_string(&mut "SET".to_string().into_bytes())
+            //.add_bulk_string(&mut key.to_string().into_bytes())
+            //.add_bulk_string(&mut timeout.to_string().into_bytes())
+            //.add_bulk_string(val);
         match self.cmd.write() {
             Err(_) => false,
             Ok(_) => self.cmd.check_status(),
@@ -49,8 +56,10 @@ impl<'a> RedisString<'a> {
     pub fn get(&mut self, key: &str) -> Result<String, RedisError> {
         self.cmd
             .add_array(2)
-            .add_bulk_string(&mut "GET".to_string().into_bytes())
-            .add_bulk_string(&mut key.to_string().into_bytes());
+            .add_bulk_string("GET")
+            .add_bulk_string(key);
+            //.add_bulk_string(&mut "GET".to_string().into_bytes())
+            //.add_bulk_string(&mut key.to_string().into_bytes());
         self.cmd.write()?;
         self.cmd.read_string()
     }
