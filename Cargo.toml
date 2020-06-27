@@ -1,9 +1,8 @@
-[package]
-name = "arnl"
-version = "0.0.1"
-authors = ["haibin.wang"]
-edition = "2018"
-description = "A rust net lib."
-license = "MIT OR Apache-2.0"
-
-[dependencies]
+[workspace]
+members = [
+    "src/libredis"
+]
+# 忽略的目录
+exclude = [
+    "test_simple"
+]

@@ -1,4 +1,3 @@
-use std::io::prelude::*;
 ///
 ///
 /// redis相关命令基础类
@@ -6,8 +5,8 @@ use std::io::prelude::*;
 ///     https://redis.io/topics/protocol
 ///     http://www.redis.cn/topics/protocol.html
 ///
-//use std::str;
-//use std::io::BufReader;
+
+use std::io::prelude::*;
 use crate::redis_client::RedisClient;
 use crate::redis_error::RedisError;
 use crate::redis_result::RedisResult;

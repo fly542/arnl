@@ -1,8 +1,9 @@
-use crate::redis_client::RedisClient;
-use crate::redis_command::{AddBulkString, RedisCommand};
-///
 ///
 /// redis string 操作
+///
+///
+use crate::redis_client::RedisClient;
+use crate::redis_command::{AddBulkString, RedisCommand};
 use crate::redis_error::RedisError;
 
 pub struct RedisString<'a> {
@@ -75,5 +76,4 @@ impl<'a> RedisString<'a> {
         self.cmd.write()?;
         self.cmd.read_string()
     }
-
 }
