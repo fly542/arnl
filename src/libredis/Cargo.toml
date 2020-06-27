@@ -1,9 +1,9 @@
 [package]
 name = "redis"
 version = "0.0.1"
-authors = ["wanghaibin <wanghaibin@qiyi.com>"]
+authors = ["haibin.wang"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "client for redis"
+license = "MIT OR Apache-2.0"
 
 [dependencies]

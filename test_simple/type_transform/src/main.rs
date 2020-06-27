@@ -1,12 +1,7 @@
-fn my_push(d:&mut Vec<u8>, s:&mut Vec<u8>)
-{
-    d.append(s);
-}
 
 /// 各种类型转Vec<u8>
 fn type_change_to_vec_u8() {
-    let c:char = '\u{01f355}';
-    //let u:u8 = x as u8;                  // x
+    let c:char = '\u{01f355}'; // utf8 字符
     let mystring = String::from("whb");
     let tmpstr = "tmpstr";
     let string2 = tmpstr.to_string();
